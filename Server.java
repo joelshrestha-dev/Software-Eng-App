@@ -25,7 +25,7 @@ public class Server {
                 <style>
                     body {
                         font-family: Arial, sans-serif;
-                        background-color: #f5f5f5;
+                        background-color: #26a798ff;
                         margin: 0;
                         padding: 20px;
                         display: flex;
@@ -40,7 +40,7 @@ public class Server {
                     table {
                         border-collapse: collapse;
                         background-color: white;
-                        max-width: 90vw;
+                        max-width: 120vw;
                         table-layout: fixed;
                         box-shadow: 0 0 10px rgba(0,0,0,0.2);
                     }
@@ -69,11 +69,11 @@ public class Server {
                 </head>
 
                 <body>
-                    <h1>Simple Java Calendar</h1>
+                    <h1>%s</h1>
                     %s
                 </body>
                 </html>
-            """.formatted(calendarHtml);
+            """.formatted(today.getMonth(),calendarHtml);
 
             exchange.sendResponseHeaders(200, response.getBytes().length);
             try (OutputStream os = exchange.getResponseBody()) {
