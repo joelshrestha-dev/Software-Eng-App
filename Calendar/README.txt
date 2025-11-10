@@ -15,4 +15,4 @@ Give it a name like CalendarApp and click Create
 Go back to apis and services -> credentials and click on your desktop client edit and u should see
 a client secret file that you can download at the bottum. 
 
-Save that in this folder. 
+Save that in this folder. Rename it client_secret. 
