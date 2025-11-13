@@ -10,18 +10,17 @@ public class CalendarGenerator {
         int startDayOfWeek = firstDay.getDayOfWeek().getValue(); // Monday=1
 
         StringBuilder html = new StringBuilder();
-
         html.append("""
             <table>
                 <tr>
-                    <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th>
-                    <th>Fri</th><th>Sat</th><th>Sun</th>
+                    <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th>
+                    <th>Fri</th><th>Sat</th>
                 </tr>
             """);
 
         html.append("<tr>");
 
-        // Empty cells before the first day of the month
+        // Empty cells before the first day
         for (int i = 1; i < startDayOfWeek; i++) {
             html.append("<td></td>");
         }
@@ -31,13 +30,13 @@ public class CalendarGenerator {
 
         for (int day = 1; day <= lengthOfMonth; day++) {
             boolean isToday = (today.getYear() == year &&
-                                today.getMonthValue() == month &&
-                                today.getDayOfMonth() == day);
+                               today.getMonthValue() == month &&
+                               today.getDayOfMonth() == day);
 
-            html.append("<td")
+            html.append("<td data-day='").append(day).append("'")
                 .append(isToday ? " class='today'" : "")
                 .append(">")
-                .append(day)
+                // If you want to add a default messege u can here but don't cause it needs more work
                 .append("</td>");
 
             if (dayOfWeekCounter == 7) {
