@@ -1,6 +1,0 @@
-To run, type the following code into powershell:
-cd:/.....
-
-javac -cp "lib/json-20250517.jar" src/*.java
-
-java -cp "lib/json-20250517.jar;src" Server
