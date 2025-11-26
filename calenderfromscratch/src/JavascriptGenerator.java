@@ -1,100 +1,75 @@
-public class JavascriptGenerator {
+import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.format.DateTimeFormatter;
+import org.json.JSONObject;
+import org.json.JSONArray;
 
-    public static String getIt(String tableBackgroundColor) {
-        return """
-            window.onload = function() {
+public class PlannerGenerator {
 
-                // ============================================================
-                // 1. CLICK A CELL → ADD TEXTAREA
-                // ============================================================
-                const cells = document.querySelectorAll("td[data-day]");
+    public static String generateWeeklyPlannerHtml(LocalDate date, JSONObject calendarNotes, JSONObject plannerNotes) {
+        // Start of week = Sunday
+        LocalDate startOfWeek = date;
+        while (startOfWeek.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            startOfWeek = startOfWeek.minusDays(1);
+        }
 
-                cells.forEach(cell => {
-                    cell.addEventListener("click", () => {
+        StringBuilder html = new StringBuilder();
 
-                        if (!cell.querySelector("textarea")) {
-                            const textarea = document.createElement("textarea");
-                            textarea.rows = 3;
-                            textarea.cols = 10;
-                            textarea.placeholder = "Add note...";
+        html.append("<table id='weeklyPlanner'>");
 
-                            textarea.style.marginLeft = "20px";
-                            textarea.style.marginTop = "10px";
-                            textarea.style.backgroundColor = "%s";
-                            textarea.style.border = "1px solid %s";
-                            textarea.style.borderRadius = "4px";
+        // ---- HEADER ROW ----
+        html.append("<tr>");
+        for (int i = 0; i < 7; i++) {
+            LocalDate day = startOfWeek.plusDays(i);
+            html.append("<th>")
+                .append(day.getDayOfWeek())
+                .append("<br>")
+                .append(day.format(DateTimeFormatter.ofPattern("MM/dd")))
+                .append("</th>");
+        }
+        html.append("</tr>");
 
-                            cell.appendChild(textarea);
-                            textarea.focus();
+        // ---- NOTES ROW ----
+        html.append("<tr>");
+        for (int i = 0; i < 7; i++) {
 
-                            // ============================================================
-                            // AUTO-SAVE NOTE WHEN THE TEXTAREA CHANGES
-                            // ============================================================
-                            textarea.addEventListener("change", () => {
+            LocalDate day = startOfWeek.plusDays(i);
+            String key = day.getYear() + "-" + day.getMonthValue() + "-" + day.getDayOfMonth();
 
-                                const note = textarea.value;
-                                const day = cell.getAttribute("data-day");
-                                const year = document.getElementById("currentYear").value;
-                                const month = document.getElementById("currentMonth").value;
+            html.append("<td data-day='").append(key).append("'>");
 
-                                fetch("/savenote", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                        year: parseInt(year),
-                                        month: parseInt(month),
-                                        day: parseInt(day),
-                                        note: note
-                                    })
-                                }).catch(err => console.error("Error saving note:", err));
-                            });
-                        }
-                    });
-                });
+            // TOP DATE LABEL
+            html.append("<div class='plannerDate'>")
+                .append(day.getDayOfMonth())
+                .append("</div>");
 
+            // EXISTING ITEMS
+            html.append("<ul class='plannerItems'>");
 
+            JSONArray items = plannerNotes.optJSONArray(key);
+            if (items != null) {
+                for (int j = 0; j < items.length(); j++) {
+                    html.append("<li>").append(items.getString(j)).append("</li>");
+                }
+            }
 
-                // ============================================================
-                // 2. MONTH NAVIGATION BUTTONS
-                // ============================================================
+            // LAST CALENDAR NOTE
+            String calNote = calendarNotes.optString(key, "");
+            if (!calNote.isBlank()) {
+                html.append("<li>").append(calNote).append("</li>");
+            }
 
-                // Read current year/month from hidden elements in your HTML
-                let currentYear = parseInt(document.getElementById("currentYear").value);
-                let currentMonth = parseInt(document.getElementById("currentMonth").value);
+            html.append("</ul>");
 
-                // Previous month button
-                document.getElementById("prevMonth").addEventListener("click", () => {
-                    currentMonth--;
-                    if (currentMonth < 1) {
-                        currentMonth = 12;
-                        currentYear--;
-                    }
+            // TEXTAREA FOR NEW ITEM
+            html.append("<textarea placeholder='Add item...'></textarea>");
 
-                    // Update the month label immediately
-                    const monthLabel = document.getElementById("monthLabel");
-                    monthLabel.textContent = new Date(currentYear, currentMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+            html.append("</td>");
+        }
+        html.append("</tr>");
 
-                    // Navigate to your Java calendar page with updated params
-                    window.location.href = "calendar?month=" + currentMonth + "&year=" + currentYear;
-                });
+        html.append("</table>");
 
-                // Next month button
-                document.getElementById("nextMonth").addEventListener("click", () => {
-                    currentMonth++;
-                    if (currentMonth > 12) {
-                        currentMonth = 1;
-                        currentYear++;
-                    }
-
-                    // Update the month label immediately
-                    const monthLabel = document.getElementById("monthLabel");
-                    monthLabel.textContent = new Date(currentYear, currentMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
-
-                    // Navigate to your Java calendar page with updated params
-                    window.location.href = "calendar?month=" + currentMonth + "&year=" + currentYear;
-                });
-
-            };
-        """.formatted(tableBackgroundColor, tableBackgroundColor);
+        return html.toString();
     }
 }
