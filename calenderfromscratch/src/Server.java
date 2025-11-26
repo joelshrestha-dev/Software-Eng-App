@@ -88,9 +88,9 @@ public class Server {
                         <input type="hidden" id="currentYear" value="%d">
                         <input type="hidden" id="currentMonth" value="%d">
                         <div style="display: flex; align-items: center; gap: 410px;">
-                            <button id="prevMonth">⬅</button>
+                            <button id="prevMonth"><-</button>
                             <span id="monthLabel"></span>
-                            <button id="nextMonth">➡</button>
+                            <button id="nextMonth">-></button>
                         </div>
                         <div style="margin-bottom:10px;">%s</div>
                         <div id="calendarContainer">%s</div>
@@ -297,3 +297,4 @@ public class Server {
         }
     }
 }
+
