@@ -1,1 +1,4 @@
+To have the ai work, you need to run it seperately in the terminal with:
+uvicorn chatbot:app --reload
+
 So im paying for this chatgpt usage so please don't use it more than necessary. 
