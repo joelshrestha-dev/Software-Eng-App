@@ -1,3 +1,5 @@
+Planning sheet: https://docs.google.com/document/d/1I9CWgbXy-2dgf1okSOBwE3Q-mnWkpLHZs6DgWXbcj8w/edit?tab=t.0 
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
