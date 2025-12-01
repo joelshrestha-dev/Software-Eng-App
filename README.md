@@ -1,6 +1,8 @@
-To run backend: mvn spring-boot:run or mvnw.cmd spring-boot:run/n
-To run ai backend: uvicorn chatbot:app --reload\n
-To run website: npm start\n
+To run backend: mvn spring-boot:run or mvnw.cmd spring-boot:run
+
+To run ai backend: uvicorn chatbot:app --reload
+
+To run website: npm start
 
 # Getting Started with Create React App
 
