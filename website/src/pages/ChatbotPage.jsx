@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import * as pdfjsLib from "pdfjs-dist";
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker.js"; // local worker
 
-// Use the local worker for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// Use the CDN worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -18,10 +17,10 @@ export default function ChatbotPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function handleSend() {
-    if (!input.trim()) return;
+  async function handleSend(messageText = input) {
+    if (!messageText.trim()) return;
 
-    const userMessage = { sender: "user", text: input };
+    const userMessage = { sender: "user", text: messageText };
     setMessages(prev => [...prev, userMessage]);
     setInput("");
 
@@ -29,7 +28,7 @@ export default function ChatbotPage() {
       const response = await fetch("http://localhost:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, message: input })
+        body: JSON.stringify({ session_id: sessionId, message: messageText })
       });
 
       const data = await response.json();
@@ -45,7 +44,6 @@ export default function ChatbotPage() {
     if (e.key === "Enter") handleSend();
   }
 
-  // Handle PDF upload
   async function handlePDFUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -65,9 +63,11 @@ export default function ChatbotPage() {
       fullText += pageText + "\n";
     }
 
+    // Send PDF content to backend
+    await handleSend(fullText);
+
     const aiMessage = { sender: "bot", text: "PDF content uploaded. You can now ask me questions about it!" };
-    const userMessage = { sender: "user", text: fullText };
-    setMessages(prev => [...prev, userMessage, aiMessage]);
+    setMessages(prev => [...prev, aiMessage]);
   }
 
   return (
@@ -101,7 +101,7 @@ export default function ChatbotPage() {
           onKeyPress={handleKeyPress}
           placeholder="Type a message..."
         />
-        <button onClick={handleSend} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: "#4a90e2", color: "white", cursor: "pointer" }}>
+        <button onClick={() => handleSend()} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: "#4a90e2", color: "white", cursor: "pointer" }}>
           Send
         </button>
         <input
