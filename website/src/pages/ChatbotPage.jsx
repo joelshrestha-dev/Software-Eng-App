@@ -1,15 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import * as pdfjsLib from "pdfjs-dist";
-
-// Use the CDN worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+import * as pdfjsLib from "pdfjs-dist/webpack"; // use webpack build
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hi! I'm your AI assistant. How can I help?" }
   ]);
   const [input, setInput] = useState("");
+  const [pdfName, setPdfName] = useState("");       // Store uploaded PDF name
+  const [pdfText, setPdfText] = useState("");       // Store extracted PDF text
   const chatEndRef = useRef(null);
   const [sessionId] = useState(uuidv4());
 
@@ -18,7 +17,9 @@ export default function ChatbotPage() {
   }, [messages]);
 
   async function handleSend(messageText = input) {
-    if (!messageText.trim()) return;
+    if (!messageText.trim() && !pdfText) return;
+
+    const combinedPrompt = pdfText ? pdfText + "\n" + messageText : messageText;
 
     const userMessage = { sender: "user", text: messageText };
     setMessages(prev => [...prev, userMessage]);
@@ -28,7 +29,7 @@ export default function ChatbotPage() {
       const response = await fetch("http://localhost:8000/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, message: messageText })
+        body: JSON.stringify({ session_id: sessionId, message: combinedPrompt })
       });
 
       const data = await response.json();
@@ -52,6 +53,8 @@ export default function ChatbotPage() {
       return;
     }
 
+    setPdfName(file.name); // show filename next to button
+
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     let fullText = "";
@@ -63,11 +66,7 @@ export default function ChatbotPage() {
       fullText += pageText + "\n";
     }
 
-    // Send PDF content to backend
-    await handleSend(fullText);
-
-    const aiMessage = { sender: "bot", text: "PDF content uploaded. You can now ask me questions about it!" };
-    setMessages(prev => [...prev, aiMessage]);
+    setPdfText(fullText); // store PDF text for prompt
   }
 
   return (
@@ -93,6 +92,7 @@ export default function ChatbotPage() {
         <div ref={chatEndRef} />
       </div>
 
+      {/* Input row */}
       <div style={{ display: "flex", gap: "10px" }}>
         <input
           style={{ flexGrow: 1, padding: "10px", borderRadius: "6px", border: "1px solid #ccc" }}
@@ -104,12 +104,29 @@ export default function ChatbotPage() {
         <button onClick={() => handleSend()} style={{ padding: "10px 16px", borderRadius: "6px", border: "none", background: "#4a90e2", color: "white", cursor: "pointer" }}>
           Send
         </button>
-        <input
-          type="file"
-          accept="application/pdf"
-          onChange={handlePDFUpload}
-          style={{ padding: "10px 16px", borderRadius: "6px", border: "1px solid #ccc", cursor: "pointer" }}
-        />
+      </div>
+
+      {/* Upload PDF button below input */}
+      <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <label
+          style={{
+            padding: "8px 16px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            background: "#f0f0f0",
+            cursor: "pointer",
+            display: "inline-block"
+          }}
+        >
+          Upload PDF
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={handlePDFUpload}
+            style={{ display: "none" }}
+          />
+        </label>
+        {pdfName && <span>{pdfName}</span>}
       </div>
     </div>
   );
