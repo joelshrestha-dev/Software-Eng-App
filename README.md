@@ -1,4 +1,6 @@
-Planning sheet: https://docs.google.com/document/d/1I9CWgbXy-2dgf1okSOBwE3Q-mnWkpLHZs6DgWXbcj8w/edit?tab=t.0 
+To run backend: mvn spring-boot:run or mvnw.cmd spring-boot:run
+To run ai backend: uvicorn chatbot:app --reload
+To run website: npm start
 
 # Getting Started with Create React App
 
