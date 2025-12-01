@@ -1,4 +1,4 @@
-To run backend: mvn spring-boot:run or mvnw.cmd spring-boot:run
+To run backend: .\mvnw.cmd spring-boot:run
 
 To run ai backend: uvicorn chatbot:app --reload
 
