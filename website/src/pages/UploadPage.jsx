@@ -1,44 +1,100 @@
-import { useState, useEffect } from "react";
-import { uploadSyllabus } from "../api/api";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { extractAssignments } from "../api/api";
 
 export default function UploadPage() {
-  useEffect(() => {
-    fetch("http://localhost:8080/api/hello")
-      .then((res) => res.text())
-      .then((data) => console.log(data));
-  }, []);
-
   const [file, setFile] = useState(null);
+  const [instructions, setInstructions] = useState("");
+  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!file) return;
+  async function handleUpload() {
+    if (!file) return alert("Please upload a PDF first.");
 
     setLoading(true);
-    const result = await uploadSyllabus(file);
+    setAssignments([]); // clear previous results
 
-    // expect { syllabusId: "123" }
-    navigate(`/plan/${result.syllabusId}`);
+    try {
+      const result = await extractAssignments(file, instructions);
+      setAssignments(result.assignments || []);
+    } catch (err) {
+      console.error(err);
+      alert("Error extracting assignments.");
+    }
+
+    setLoading(false);
   }
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>Upload Syllabus</h1>
+    <div style={{ display: "flex", gap: "50px", padding: "30px" }}>
+      
+      {/* LEFT SIDE: PDF UPLOAD */}
+      <div style={{ flex: 1, maxWidth: "500px" }}>
+        <h2 style={{ marginBottom: "15px" }}>Upload Syllabus PDF</h2>
 
-      <form onSubmit={handleSubmit}>
-        <input 
-          type="file" 
-          accept=".pdf,.doc,.docx" 
-          onChange={(e) => setFile(e.target.files[0])}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "10px" }}>
+          <input 
+            type="file" 
+            accept="application/pdf"
+            onChange={(e) => setFile(e.target.files[0])}
+            style={{ height: "36px" }}
+          />
+          <button 
+            onClick={handleUpload} 
+            style={{ height: "36px" }}
+          >
+            Extract Assignments
+          </button>
+        </div>
+
+        {loading && <p style={{ marginTop: "10px" }}>Extracting file...</p>}
+
+        {/* Show assignments only when available */}
+        {assignments.length > 0 && (
+          <>
+            <h3 style={{ marginTop: "20px" }}>Extracted Assignments</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+              <thead>
+                <tr>
+                  <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>Title</th>
+                  <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>Due Date</th>
+                  <th style={{ border: "1px solid #ccc", padding: "8px", textAlign: "left" }}>Estimated Time (min)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignments.map((a, idx) => (
+                  <tr key={idx}>
+                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>{a.title}</td>
+                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>{a.dueDate}</td>
+                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>{a.estTime}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
+
+      {/* RIGHT SIDE: INSTRUCTIONS */}
+      <div style={{ flex: 1, maxWidth: "500px" }}>
+        <h2 style={{ marginBottom: "15px" }}>Additional Instructions</h2>
+
+        <label>
+          Anything the scheduler should know about your PDF?
+        </label>
+
+        <textarea
+          value={instructions}
+          onChange={(e) => setInstructions(e.target.value)}
+          placeholder="Example: I only care about assignments worth more than 5% of the grade..."
+          style={{
+            width: "100%",
+            height: "200px",
+            marginTop: "10px",
+            padding: "10px",
+            boxSizing: "border-box"
+          }}
         />
-
-        <button style={{ marginLeft: "10px" }} type="submit">
-          {loading ? "Uploading..." : "Submit"}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

@@ -1,26 +1,13 @@
-const BASE_URL = process.env.REACT_APP_API_URL ?? "http://localhost:8080/api";
-
-
-// Upload the syllabus file
-export async function uploadSyllabus(file) {
+// FASTAPI AI Backend
+export async function extractAssignments(file, instructions) {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("instructions", instructions);   // NEW
 
-  const res = await fetch(`${BASE_URL}/upload`, {
+  const res = await fetch("http://localhost:8000/extract-plan", {
     method: "POST",
     body: formData,
   });
 
-  return res.json(); // expected { syllabusId: "123" }
-}
-
-// Fetch plan (dummy for now)
-export async function getPlan(id) {
-  // Return dummy JSON 
-  return {
-    assignments: [
-      { title: "HW1", dueDate: "2025-02-15", estTime: 120 },
-      { title: "Project Proposal", dueDate: "2025-02-22", estTime: 240 }
-    ]
-  };
+  return res.json();   // { assignments: [...] }
 }
