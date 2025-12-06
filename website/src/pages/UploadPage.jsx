@@ -11,14 +11,32 @@ export default function UploadPage() {
     if (!file) return alert("Please upload a PDF first.");
 
     setLoading(true);
-    setAssignments([]); // clear previous results
+    setAssignments([]);
 
     try {
+      // Step 1 → Extract assignments from PDF
       const result = await extractAssignments(file, instructions);
-      setAssignments(result.assignments || []);
+      const extracted = result.assignments || [];
+      setAssignments(extracted);
+
+      // Step 2 → Push extracted assignments to your DB (NO /api prefix)
+      if (extracted.length > 0) {
+          const resp = await fetch("http://localhost:3001/assignments/bulk", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assignments: extracted }),
+          });
+
+          if (!resp.ok) {
+            throw new Error("Failed saving assignments to database");
+          }
+
+          alert("Assignments saved to database!");
+      }
+
     } catch (err) {
       console.error(err);
-      alert("Error extracting assignments.");
+      alert("Error extracting or saving assignments.");
     }
 
     setLoading(false);
