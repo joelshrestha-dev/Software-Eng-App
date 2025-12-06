@@ -1,21 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction"; // allows clicking
 
 export default function CalendarPage() {
-  const [events, setEvents] = useState([
-    { title: "HW1 Due", date: "2025-02-15" },
-    { title: "Project Proposal", date: "2025-02-22" },
-    { title: "Ruthy's Birthday", date: "2025-12-22" }
-  ]);
+  const [events, setEvents] = useState([]);
 
   const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    fetch("http://localhost:3001/events")
+      .then(res => res.json())
+      .then(data => {
+        // Convert backend events → FullCalendar format
+        const formatted = data.map(ev => ({
+          title: ev.title,
+          date: ev.start_datetime?.slice(0, 10) // "2025-02-15T00:00:00" → "2025-02-15"
+        }));
+        setEvents(formatted);
+      })
+      .catch(err => console.error("Error loading events:", err));
+  }, []);
+
 
   function handleDateClick(info) {
     const title = prompt("Event title?");
     if (title) {
-      setEvents([...events, { title, date: info.dateStr }]);
+      fetch("http://localhost:3001/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          calendar_id: 1,             // or dynamic user calendar
+          title: title,
+          description: "",
+          start_datetime: info.dateStr,
+          end_datetime: info.dateStr,
+          location: ""
+        })
+      })
+      .then(res => res.json())
+      .then(() => {
+        // Refresh events after adding
+        return fetch("http://localhost:3001/events")
+          .then(res => res.json())
+          .then(data => {
+            const formatted = data.map(ev => ({
+              title: ev.title,
+              date: ev.start_datetime.slice(0, 10)
+            }));
+            setEvents(formatted);
+          });
+      });
     }
   }
 
